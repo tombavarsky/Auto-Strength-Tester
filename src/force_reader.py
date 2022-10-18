@@ -17,20 +17,23 @@ def get_force_val(sensor):
     sensor.reset_input_buffer()
     sensor.write(b'?')  # requests value
     bytes_to_read = sensor.in_waiting
-    # sensor_val = sensor.read(bytes_to_read).decode('UTF-8')
     sensor_val = sensor.read(bytes_to_read).decode('utf-8')
     if sensor_val != "":
         return sensor_val
 
 
 def main():
+    arduino = serial.Serial(find_port(ARDUINO_VID_PID), 115200)
     force_sensor = serial.Serial(find_port(SENSOR_VID_PID), 115200)
 
     while True:
         sensor_val = get_force_val(force_sensor)
 
         if sensor_val is not None:
-            print(float(sensor_val[:4]))
+            sensor_val = float(sensor_val[:4])
+            print(sensor_val)
+
+            arduino.write(sensor_val)
 
 
 main()
