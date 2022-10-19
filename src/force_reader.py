@@ -1,8 +1,10 @@
 import serial.tools.list_ports
 import serial
+import math
 
 SENSOR_VID_PID = "VID:PID=0483:5740"
 ARDUINO_VID_PID = "VID:PID=2341:0043"
+no_arduino = False
 
 
 def find_port(VID_PID):
@@ -18,22 +20,46 @@ def get_force_val(sensor):
     sensor.write(b'?')  # requests value
     bytes_to_read = sensor.in_waiting
     sensor_val = sensor.read(bytes_to_read).decode('utf-8')
+
     if sensor_val != "":
         return sensor_val
 
 
 def main():
-    arduino = serial.Serial(find_port(ARDUINO_VID_PID), 115200)
+    try:
+        arduino = serial.Serial(
+            find_port(ARDUINO_VID_PID), 115200, write_timeout=0, timeout=1)
+        no_arduino = False
+    except (ValueError):
+        print("ARDUINO IS NOT CONNECTED!")
+        no_arduino = True
+
     force_sensor = serial.Serial(find_port(SENSOR_VID_PID), 115200)
+
+    print("Enter number of iterations: ")
+    ITERATIONS = input().encode()
+    print(ITERATIONS)
+    print("Enter wanted force: ")
+    WANTED_FORCE = input().encode()
+
+    arduino.write(ITERATIONS)
+    arduino.write(WANTED_FORCE)
 
     while True:
         sensor_val = get_force_val(force_sensor)
 
         if sensor_val is not None:
-            sensor_val = float(sensor_val[:4])
-            print(sensor_val)
+            sensor_val = sensor_val[:sensor_val.find('.') + 2]
+            # print(sensor_val)
+            if not no_arduino:
+                arduino.write(str(-1 * abs(float(sensor_val))).encode())
+                answer = arduino.read(arduino.in_waiting)
+                if answer != b'':
+                    print("got: ", answer)
 
-            arduino.write(sensor_val)
+                if answer == b"fin":
+                    print("FINNISHED ALL ITERATIONS!")
+                    break
 
 
 main()
