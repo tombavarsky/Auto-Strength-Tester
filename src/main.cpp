@@ -2,7 +2,6 @@
 
 int motor_power = 0;
 float force_err = 0;
-const float KP = 5;
 volatile long encoder_val = 0;
 
 const int MOTOR_PWM_PIN = 10;
@@ -31,6 +30,8 @@ void loop()
   static float wanted_force = 0;
   static int iterations = 0;
   static bool new_iteration = false;
+  static const int THRESH = 0;
+  static const float KP = 15;
 
   while (wanted_force == 0 || iterations == 0)
   {
@@ -67,13 +68,13 @@ void loop()
   motor_power = max(min(force_err * KP, 255), -255);
 
   Serial.write(abs(motor_power));
-  if (motor_power < -1)
-  {
-    digitalWrite(MOTOR_DIR_PIN, 1);
-  }
-  else if (motor_power > 10)
+  if (motor_power < -THRESH)
   {
     digitalWrite(MOTOR_DIR_PIN, 0);
+  }
+  else if (motor_power > THRESH)
+  {
+    digitalWrite(MOTOR_DIR_PIN, 1);
   }
 
   analogWrite(MOTOR_PWM_PIN, abs(motor_power));
