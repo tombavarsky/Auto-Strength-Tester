@@ -3,12 +3,13 @@
 int motor_power = 0;
 float force_err = 0;
 volatile long encoder_val = 0;
+int direction = 0; // 1 - forwards -1 - backwards
 
 const int MOTOR_PWM_PIN = 10;
 const int MOTOR_DIR_PIN = 12;
 const int ENCODER_PIN = 3;
 
-void update_encoder() { encoder_val++; }
+void update_encoder() { encoder_val += direction; }
 
 void setup()
 {
@@ -31,7 +32,7 @@ void loop()
   static int iterations = 0;
   static bool new_iteration = false;
   static const int THRESH = 0;
-  static const float KP = 15;
+  static const float KP = 10;
 
   while (wanted_force == 0 || iterations == 0)
   {
@@ -42,22 +43,11 @@ void loop()
         iterations = Serial.parseInt();
       }
       wanted_force = Serial.parseInt();
-      // Serial.write("---i---");
-      // Serial.write(int(iterations));
-      // Serial.write("---w---");
-      // Serial.write(int(wanted_force));
     }
-
-    // Serial.print(iterations);
-    // Serial.print("   ");
-    // Serial.print(Serial.available());
-    // Serial.print("   ");
-    // Serial.println(wanted_force);
   }
 
   if (Serial.available() > 0)
   {
-    // Serial.println("------------------------------");
     force_val = abs(Serial.parseFloat());
 
     // Serial.write((int)force_val); // for debug
@@ -67,14 +57,17 @@ void loop()
   force_err = wanted_force - force_val;
   motor_power = max(min(force_err * KP, 255), -255);
 
-  Serial.write(abs(motor_power));
+  Serial.write(encoder_val);
+
   if (motor_power < -THRESH)
   {
     digitalWrite(MOTOR_DIR_PIN, 0);
+    direction = -1;
   }
   else if (motor_power > THRESH)
   {
     digitalWrite(MOTOR_DIR_PIN, 1);
+    direction = 1;
   }
 
   analogWrite(MOTOR_PWM_PIN, abs(motor_power));
