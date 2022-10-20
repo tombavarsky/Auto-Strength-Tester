@@ -2,15 +2,26 @@
 
 int motor_power = 0;
 float force_err = 0;
-const float KP = 1;
-const int MOTOR_PIN = 0;
+const float KP = 10;
+volatile long encoder_val = 0;
+
+const int MOTOR_PWM_PIN = 10;
+const int MOTOR_DIR_PIN = 12;
+const int ENCODER_PIN = 3;
+
+void update_encoder() { encoder_val++; }
 
 void setup()
 {
   Serial.begin(115200);
+  // Serial.setTimeout(0);
 
   pinMode(13, OUTPUT);
-  pinMode(MOTOR_PIN, OUTPUT);
+  pinMode(MOTOR_PWM_PIN, OUTPUT);
+  pinMode(MOTOR_DIR_PIN, OUTPUT);
+  pinMode(ENCODER_PIN, INPUT);
+
+  attachInterrupt(digitalPinToInterrupt(ENCODER_PIN), update_encoder, RISING);
 }
 
 void loop()
@@ -23,32 +34,54 @@ void loop()
 
   while (wanted_force == 0 || iterations == 0)
   {
-    if (Serial.available() > 1)
+    if (Serial.available() > 2)
     {
-      iterations = Serial.read();
-      wanted_force = Serial.read();
+      if (iterations == 0)
+      {
+        iterations = Serial.parseInt();
+      }
+      wanted_force = Serial.parseInt();
+      // Serial.write("---i---");
+      // Serial.write(int(iterations));
+      // Serial.write("---w---");
+      // Serial.write(int(wanted_force));
     }
+
+    // Serial.print(iterations);
+    // Serial.print("   ");
+    // Serial.print(Serial.available());
+    // Serial.print("   ");
+    // Serial.println(wanted_force);
   }
-  // Serial.write(int(force_err));
 
   if (Serial.available() > 0)
   {
+    // Serial.println("------------------------------");
     force_val = abs(Serial.parseFloat());
 
     // Serial.write((int)force_val); // for debug
   }
 
+  // calculating motor's power
   force_err = wanted_force - force_val;
   motor_power = force_err * KP;
-  analogWrite(MOTOR_PIN, motor_power);
+  if (motor_power < 0)
+  {
+    digitalWrite(MOTOR_DIR_PIN, 1);
+  }
+  else
+  {
+    digitalWrite(MOTOR_DIR_PIN, 0);
+  }
 
-  // Serial.write(iterations);
-  if (force_err < 2 && force_err > -2 && !new_iteration)
+  analogWrite(MOTOR_PWM_PIN, motor_power);
+
+  // Serial.write(int(force_err));
+
+  if (force_err < 1 && force_err > -1 && !new_iteration)
   { // reached wanted force and therefore finnished the iteration.
     curr_iteration++;
     Serial.write(int(curr_iteration));
-    Serial.write("----");
-    Serial.write(int(iterations));
     new_iteration = true;
   }
   if (new_iteration && force_val == 0)
@@ -59,5 +92,12 @@ void loop()
   if (curr_iteration == iterations)
   {
     Serial.write("fin");
+
+    iterations = 0;
+    wanted_force = 0;
+    while (true)
+    {
+      analogWrite(MOTOR_PWM_PIN, 0);
+    }
   }
 }

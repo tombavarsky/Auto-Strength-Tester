@@ -38,11 +38,11 @@ def main():
 
     print("Enter number of iterations: ")
     ITERATIONS = input().encode()
-    print(ITERATIONS)
     print("Enter wanted force: ")
     WANTED_FORCE = input().encode()
 
     arduino.write(ITERATIONS)
+    arduino.write(b' ')
     arduino.write(WANTED_FORCE)
 
     while True:
@@ -57,7 +57,7 @@ def main():
                 if answer != b'':
                     print("got: ", answer)
 
-                if answer == b"fin":
+                if answer == b"fin" or b"fin" in answer:
                     print("FINNISHED ALL ITERATIONS!")
                     break
 
