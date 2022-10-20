@@ -2,7 +2,7 @@
 
 int motor_power = 0;
 float force_err = 0;
-const float KP = 10;
+const float KP = 5;
 volatile long encoder_val = 0;
 
 const int MOTOR_PWM_PIN = 10;
@@ -14,7 +14,7 @@ void update_encoder() { encoder_val++; }
 void setup()
 {
   Serial.begin(115200);
-  // Serial.setTimeout(0);
+  // Serial.setTimeout(5);
 
   pinMode(13, OUTPUT);
   pinMode(MOTOR_PWM_PIN, OUTPUT);
@@ -64,17 +64,19 @@ void loop()
 
   // calculating motor's power
   force_err = wanted_force - force_val;
-  motor_power = force_err * KP;
-  if (motor_power < 0)
+  motor_power = max(min(force_err * KP, 255), -255);
+
+  Serial.write(abs(motor_power));
+  if (motor_power < -1)
   {
     digitalWrite(MOTOR_DIR_PIN, 1);
   }
-  else
+  else if (motor_power > 10)
   {
     digitalWrite(MOTOR_DIR_PIN, 0);
   }
 
-  analogWrite(MOTOR_PWM_PIN, motor_power);
+  analogWrite(MOTOR_PWM_PIN, abs(motor_power));
 
   // Serial.write(int(force_err));
 
@@ -91,7 +93,7 @@ void loop()
 
   if (curr_iteration == iterations)
   {
-    Serial.write("fin");
+    Serial.write("finfinfin");
 
     iterations = 0;
     wanted_force = 0;
