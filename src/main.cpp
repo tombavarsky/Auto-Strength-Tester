@@ -1,15 +1,41 @@
 #include <Arduino.h>
+#include <EnableInterrupt.h>
 
 int motor_power = 0;
 float force_err = 0;
 volatile long encoder_val = 0;
-int direction = 0; // 1 - forwards -1 - backwards
 
 const int MOTOR_PWM_PIN = 10;
 const int MOTOR_DIR_PIN = 12;
-const int ENCODER_PIN = 3;
+const int ENCODER_PIN_A = 3;
+const int ENCODER_PIN_B = 5;
 
-void update_encoder() { encoder_val += direction; }
+void encoderCount()
+{
+  static int lastEncoded = 0;
+
+  int EncoderPhaseA = digitalRead(ENCODER_PIN_A); // MSB
+  int EncoderPhaseB = digitalRead(ENCODER_PIN_B); // LSB
+
+  int currentEncoded = (EncoderPhaseA << 1) | EncoderPhaseB;
+  int sum = (lastEncoded << 2) | currentEncoded;
+  switch (sum)
+  {
+  case 0b0001:
+  case 0b0111:
+  case 0b1110:
+  case 0b1000:
+    encoder_val--;
+    break;
+  case 0b0010:
+  case 0b1011:
+  case 0b1101:
+  case 0b0100:
+    encoder_val++;
+    break;
+  }
+  lastEncoded = currentEncoded;
+}
 
 void setup()
 {
@@ -19,9 +45,11 @@ void setup()
   pinMode(13, OUTPUT);
   pinMode(MOTOR_PWM_PIN, OUTPUT);
   pinMode(MOTOR_DIR_PIN, OUTPUT);
-  pinMode(ENCODER_PIN, INPUT);
+  pinMode(ENCODER_PIN_A, INPUT_PULLUP);
+  pinMode(ENCODER_PIN_B, INPUT_PULLUP);
 
-  attachInterrupt(digitalPinToInterrupt(ENCODER_PIN), update_encoder, RISING);
+  enableInterrupt(ENCODER_PIN_A, encoderCount, CHANGE);
+  enableInterrupt(ENCODER_PIN_B, encoderCount, CHANGE);
 }
 
 void loop()
@@ -33,6 +61,11 @@ void loop()
   static bool new_iteration = false;
   static const int THRESH = 0;
   static const float KP = 10;
+
+  // while (true)
+  // {
+  //   Serial.println(encoder_val);
+  // }
 
   while (wanted_force == 0 || iterations == 0)
   {
@@ -62,12 +95,10 @@ void loop()
   if (motor_power < -THRESH)
   {
     digitalWrite(MOTOR_DIR_PIN, 0);
-    direction = -1;
   }
   else if (motor_power > THRESH)
   {
     digitalWrite(MOTOR_DIR_PIN, 1);
-    direction = 1;
   }
 
   analogWrite(MOTOR_PWM_PIN, abs(motor_power));
