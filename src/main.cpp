@@ -1,6 +1,7 @@
 #include <Arduino.h>
 #include <EnableInterrupt.h>
 #include <PID_v1.h>
+#include <ArduinoJson.h>
 
 float force_err = 0;
 volatile long encoder_val = 0;
@@ -14,6 +15,8 @@ double wanted_force, force_val, motor_power;
 
 const float Kp = 1, Ki = 0.5, Kd = 4;
 PID myPID(&force_val, &motor_power, &wanted_force, Kp, Ki, Kd, DIRECT);
+
+StaticJsonDocument<JSON_OBJECT_SIZE(3)> doc;
 
 void move_motor(int motor_power, const int THRESH = 0)
 {
@@ -58,29 +61,6 @@ void encoderCount()
   lastEncoded = currentEncoded;
 }
 
-// float compute_PID(const float input, const float kp, const float ki, const float kd, const float setpoint)
-// {
-//   static unsigned long lastTime;
-//   static float errSum, lastErr;
-//   /*How long since we last calculated*/
-//   unsigned long now = millis();
-//   float timeChange = now - lastTime;
-
-//   /*Compute all the working error variables*/
-//   float error = setpoint - input;
-//   errSum += (error * timeChange);
-//   float dErr = (error - lastErr) / timeChange;
-
-//   /*Compute PID Output*/
-//   float output = kp * error + ki * errSum + kd * dErr;
-
-//   /*Remember some variables for next time*/
-//   lastErr = error;
-//   lastTime = now;
-
-//   return output;
-// }
-
 void clear_serial()
 {
   while (Serial.available() > 0)
@@ -106,6 +86,7 @@ void setup()
   clear_serial();
 
   myPID.SetMode(AUTOMATIC);
+  myPID.SetOutputLimits(0, 255);
 }
 
 void loop()
@@ -116,6 +97,22 @@ void loop()
 
   static const float ENCODER_KP = 1.6;
   static const float ERR_THRESH = 0.2;
+  unsigned long curr_time = millis();
+  static unsigned long send_time = 0;
+  static char s_doc[128];
+
+  doc["time"] = curr_time / 1000;
+  doc["iteration"] = curr_iteration;
+  doc["force"] = force_val;
+
+  serializeJson(doc, s_doc);
+
+  if (curr_time - send_time >= 100)
+  {
+    send_time = curr_time;
+    Serial.write(s_doc);
+    Serial.write('\n');
+  }
 
   // while (true)
   // {
@@ -146,18 +143,14 @@ void loop()
   // calculating motor's power
   force_err = wanted_force - force_val;
   // motor_power = force_err * KP;
-  // motor_power = compute_PID(force_val, KP, KI, KD, wanted_force);
 
-  Serial.write(int(force_val));
+  // Serial.write(int(force_val));
 
   move_motor(motor_power);
-
-  // Serial.write(int(force_err));
 
   if (force_err < ERR_THRESH && force_err > -ERR_THRESH && !new_iteration)
   { // reached wanted force and therefore finnished the iteration.
     curr_iteration++;
-    Serial.write(int(curr_iteration));
     new_iteration = true;
 
     while (encoder_val < -10 || encoder_val > 10)

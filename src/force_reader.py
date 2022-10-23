@@ -45,6 +45,8 @@ def main():
     arduino.write(b' ')
     arduino.write(WANTED_FORCE)
 
+    answer = b""
+
     while True:
         sensor_val = get_force_val(force_sensor)
 
@@ -54,8 +56,17 @@ def main():
             if not no_arduino:
                 arduino.write(str(-1 * abs(float(sensor_val))).encode())
                 answer = arduino.read(arduino.in_waiting)
+                # while True:
+                #     answer += arduino.read()
+
+                #     if b"\n" in answer:
+                #         print(answer)
+                #         break
+
+                # answer = arduino.readline()
+
                 if answer != b'':
-                    print("got: ", answer)
+                    print(answer)
 
                 if answer == b"fin" or b"fin" in answer:
                     print("FINNISHED ALL ITERATIONS!")
