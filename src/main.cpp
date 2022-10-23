@@ -1,7 +1,7 @@
 #include <Arduino.h>
 #include <EnableInterrupt.h>
+#include <PID_v1.h>
 
-int motor_power = 0;
 float force_err = 0;
 volatile long encoder_val = 0;
 
@@ -9,6 +9,27 @@ const int MOTOR_PWM_PIN = 10;
 const int MOTOR_DIR_PIN = 12;
 const int ENCODER_PIN_A = 3;
 const int ENCODER_PIN_B = 5;
+
+double wanted_force, force_val, motor_power;
+
+const float Kp = 1, Ki = 0.5, Kd = 4;
+PID myPID(&force_val, &motor_power, &wanted_force, Kp, Ki, Kd, DIRECT);
+
+void move_motor(int motor_power, const int THRESH = 0)
+{
+  motor_power = max(min(motor_power, 255), -255);
+
+  if (motor_power < -THRESH)
+  {
+    digitalWrite(MOTOR_DIR_PIN, 0);
+  }
+  else if (motor_power > THRESH)
+  {
+    digitalWrite(MOTOR_DIR_PIN, 1);
+  }
+
+  analogWrite(MOTOR_PWM_PIN, abs(motor_power));
+}
 
 void encoderCount()
 {
@@ -37,10 +58,41 @@ void encoderCount()
   lastEncoded = currentEncoded;
 }
 
+// float compute_PID(const float input, const float kp, const float ki, const float kd, const float setpoint)
+// {
+//   static unsigned long lastTime;
+//   static float errSum, lastErr;
+//   /*How long since we last calculated*/
+//   unsigned long now = millis();
+//   float timeChange = now - lastTime;
+
+//   /*Compute all the working error variables*/
+//   float error = setpoint - input;
+//   errSum += (error * timeChange);
+//   float dErr = (error - lastErr) / timeChange;
+
+//   /*Compute PID Output*/
+//   float output = kp * error + ki * errSum + kd * dErr;
+
+//   /*Remember some variables for next time*/
+//   lastErr = error;
+//   lastTime = now;
+
+//   return output;
+// }
+
+void clear_serial()
+{
+  while (Serial.available() > 0)
+  {
+    Serial.read();
+  }
+}
+
 void setup()
 {
   Serial.begin(115200);
-  // Serial.setTimeout(5);
+  // Serial.setTimeout(50);
 
   pinMode(13, OUTPUT);
   pinMode(MOTOR_PWM_PIN, OUTPUT);
@@ -50,17 +102,20 @@ void setup()
 
   enableInterrupt(ENCODER_PIN_A, encoderCount, CHANGE);
   enableInterrupt(ENCODER_PIN_B, encoderCount, CHANGE);
+
+  clear_serial();
+
+  myPID.SetMode(AUTOMATIC);
 }
 
 void loop()
 {
-  static float force_val = 0;
   static int curr_iteration = 0;
-  static float wanted_force = 0;
   static int iterations = 0;
   static bool new_iteration = false;
-  static const int THRESH = 0;
-  static const float KP = 10;
+
+  static const float ENCODER_KP = 1.6;
+  static const float ERR_THRESH = 0.2;
 
   // while (true)
   // {
@@ -86,38 +141,38 @@ void loop()
     // Serial.write((int)force_val); // for debug
   }
 
+  myPID.Compute();
+
   // calculating motor's power
   force_err = wanted_force - force_val;
-  motor_power = max(min(force_err * KP, 255), -255);
+  // motor_power = force_err * KP;
+  // motor_power = compute_PID(force_val, KP, KI, KD, wanted_force);
 
-  Serial.write(encoder_val);
+  Serial.write(int(force_val));
 
-  if (motor_power < -THRESH)
-  {
-    digitalWrite(MOTOR_DIR_PIN, 0);
-  }
-  else if (motor_power > THRESH)
-  {
-    digitalWrite(MOTOR_DIR_PIN, 1);
-  }
-
-  analogWrite(MOTOR_PWM_PIN, abs(motor_power));
+  move_motor(motor_power);
 
   // Serial.write(int(force_err));
 
-  if (force_err < 1 && force_err > -1 && !new_iteration)
+  if (force_err < ERR_THRESH && force_err > -ERR_THRESH && !new_iteration)
   { // reached wanted force and therefore finnished the iteration.
     curr_iteration++;
     Serial.write(int(curr_iteration));
     new_iteration = true;
+
+    while (encoder_val < -10 || encoder_val > 10)
+    {
+      move_motor(encoder_val * ENCODER_KP);
+    }
   }
+
   if (new_iteration && force_val == 0)
   {
     new_iteration = false;
   }
 
   if (curr_iteration == iterations)
-  {
+  { // finnished all iterations
     Serial.write("finfinfin");
 
     iterations = 0;
