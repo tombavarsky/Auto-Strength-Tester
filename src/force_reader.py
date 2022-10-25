@@ -52,9 +52,9 @@ def main():
 
         if sensor_val is not None:
             sensor_val = sensor_val[:sensor_val.find('.') + 2]
-            # print(sensor_val)
+            print(sensor_val)
             if not no_arduino:
-                arduino.write(str(-1 * abs(float(sensor_val))).encode())
+                arduino.write(sensor_val.encode())
                 answer = arduino.read(arduino.in_waiting)
                 # while True:
                 #     answer += arduino.read()
