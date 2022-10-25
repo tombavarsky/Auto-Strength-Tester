@@ -50,7 +50,7 @@ def main():
     ITERATION_SIGN = b"it"
     FINNISH_SIGN = b"fin"
     START_TIME = time.time()
-    WRITE_RESULUTION = 0.1
+    WRITE_RESULUTION = 0.01
     write_time = 0
 
     curr_iteration = 0
@@ -70,10 +70,12 @@ def main():
 
         if sensor_val is not None:
             sensor_val = sensor_val[:sensor_val.find('.') + 2]
-            print(sensor_val)
+            # print(sensor_val)
             if not no_arduino:
                 # arduino.write('<'.encode())
+                # arduino.write(str(abs(float(sensor_val))).encode())
                 arduino.write(sensor_val.encode())
+                print(str(-1 * abs(float(sensor_val))))
                 # arduino.write('>'.encode())
                 answer = arduino.read(arduino.in_waiting)
                 # while True:

@@ -23,20 +23,25 @@ PID myPID(&force_val, &motor_power, &wanted_force, Kp, Ki, Kd, DIRECT);
 
 StaticJsonDocument<JSON_OBJECT_SIZE(3)> doc;
 
-void move_motor(int motor_power, const int THRESH = 0)
+void move_motor(int motor_pow, const bool backwards, const int THRESH = 0)
 {
-  motor_power = max(min(motor_power, 255), -255);
+  motor_pow = max(min(motor_pow, 255), -255);
 
-  if (motor_power < -THRESH)
+  // if (motor_pow < -THRESH)
+  if (backwards)
   {
     digitalWrite(MOTOR_DIR_PIN, 0);
+    myPID.SetControllerDirection(REVERSE);
+    Serial.write("ba");
   }
-  else if (motor_power > THRESH)
+  else // if (motor_pow > THRESH)
   {
+    myPID.SetControllerDirection(DIRECT);
     digitalWrite(MOTOR_DIR_PIN, 1);
+    Serial.write("fo");
   }
 
-  analogWrite(MOTOR_PWM_PIN, abs(motor_power));
+  analogWrite(MOTOR_PWM_PIN, abs(motor_pow));
 }
 
 void encoderCount()
@@ -168,6 +173,9 @@ void loop()
         iterations = Serial.parseInt();
       }
       wanted_force = Serial.parseInt();
+
+      Serial.write(iterations);
+      Serial.write((int)wanted_force);
     }
   }
 
@@ -191,22 +199,20 @@ void loop()
 
   if (force_val == 0.0)
   {
-    myPID.SetTunings(4, 0.01, 1);
+    myPID.SetTunings(5, 0.01, 1);
   }
   else
   {
     myPID.SetTunings(Kp, Ki, Kd);
   }
 
-  myPID.Compute();
-
   // calculating motor's power
   force_err = wanted_force - force_val;
-  // motor_power = force_err * KP;
+  myPID.Compute();
 
   // Serial.write(int(force_val));
 
-  move_motor(motor_power);
+  move_motor(motor_power, wanted_force < force_val);
 
   if (force_err < ERR_THRESH && force_err > -ERR_THRESH && !new_iteration)
   { // reached wanted force and therefore finnished the iteration.
@@ -215,20 +221,20 @@ void loop()
 
     while (encoder_val < -10 || encoder_val > 10)
     {
-      move_motor(encoder_val * ENCODER_KP);
+      move_motor(encoder_val * ENCODER_KP, true);
     }
   }
 
   if (new_iteration && force_val == 0)
   {
-    Serial.write("it");
+    Serial.write("ititit");
     new_iteration = false;
   }
 
   if (curr_iteration == iterations)
   { // finnished all iterations
 
-    Serial.write("it");
+    Serial.write("ititit");
     Serial.write("finfinfin");
 
     iterations = 0;
