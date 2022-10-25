@@ -50,6 +50,8 @@ def main():
     ITERATION_SIGN = b"it"
     FINNISH_SIGN = b"fin"
     START_TIME = time.time()
+    WRITE_RESULUTION = 0.1
+    write_time = 0
 
     curr_iteration = 0
     curr_time = 0.0
@@ -70,7 +72,9 @@ def main():
             sensor_val = sensor_val[:sensor_val.find('.') + 2]
             print(sensor_val)
             if not no_arduino:
+                # arduino.write('<'.encode())
                 arduino.write(sensor_val.encode())
+                # arduino.write('>'.encode())
                 answer = arduino.read(arduino.in_waiting)
                 # while True:
                 #     answer += arduino.read()
@@ -87,7 +91,9 @@ def main():
                     print("NEXT ITERATION!! ", curr_iteration)
 
                 data = [curr_iteration, curr_time, sensor_val]
-                writer.writerow(data)
+                if curr_time - write_time >= WRITE_RESULUTION:
+                    write_time = curr_time
+                    writer.writerow(data)
 
                 if FINNISH_SIGN in answer:
                     print("FINNISHED ALL ITERATIONS!")

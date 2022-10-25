@@ -11,9 +11,14 @@ const int MOTOR_DIR_PIN = 12;
 const int ENCODER_PIN_A = 3;
 const int ENCODER_PIN_B = 5;
 
+const byte buffSize = 40;
+char messageFromPC[buffSize] = {0};
+
+char inputBuffer[buffSize];
+
 double wanted_force, force_val, motor_power;
 
-const float Kp = 1, Ki = 0.5, Kd = 4;
+const float Kp = 1, Ki = 0.8, Kd = 4;
 PID myPID(&force_val, &motor_power, &wanted_force, Kp, Ki, Kd, DIRECT);
 
 StaticJsonDocument<JSON_OBJECT_SIZE(3)> doc;
@@ -66,6 +71,49 @@ void clear_serial()
   while (Serial.available() > 0)
   {
     Serial.read();
+  }
+}
+
+bool newData = false;
+const byte numChars = 8;
+char receivedChars[numChars];
+
+void recvWithStartEndMarkers()
+{
+  static bool recvInProgress = false;
+  static byte ndx = 0;
+  char startMarker = '<';
+  char endMarker = '>';
+  char rc;
+
+  while (Serial.available() > 0 && newData == false)
+  {
+    rc = Serial.read();
+
+    if (recvInProgress == true)
+    {
+      if (rc != endMarker)
+      {
+        receivedChars[ndx] = rc;
+        ndx++;
+        if (ndx >= numChars)
+        {
+          ndx = numChars - 1;
+        }
+      }
+      else
+      {
+        receivedChars[ndx] = '\0'; // terminate the string
+        recvInProgress = false;
+        ndx = 0;
+        newData = true;
+      }
+    }
+
+    else if (rc == startMarker)
+    {
+      recvInProgress = true;
+    }
   }
 }
 
@@ -128,6 +176,26 @@ void loop()
     force_val = abs(Serial.parseFloat());
 
     // Serial.write((int)force_val); // for debug
+    // Serial.println(force_val);
+  }
+
+  // recvWithStartEndMarkers();
+
+  // if (newData == true)
+  // {
+  //   // Serial.print("This just in ... ");
+  //   // Serial.println(atof(receivedChars));
+  //   force_val = (float)atof(receivedChars);
+  //   newData = false;
+  // }
+
+  if (force_val == 0.0)
+  {
+    myPID.SetTunings(4, 0.01, 1);
+  }
+  else
+  {
+    myPID.SetTunings(Kp, Ki, Kd);
   }
 
   myPID.Compute();
