@@ -1,6 +1,7 @@
 import serial.tools.list_ports
 import serial
-import math
+import csv
+import time
 
 SENSOR_VID_PID = "VID:PID=0483:5740"
 ARDUINO_VID_PID = "VID:PID=2341:0043"
@@ -45,9 +46,24 @@ def main():
     arduino.write(b' ')
     arduino.write(WANTED_FORCE)
 
-    answer = b""
+    # answer = b""
+    ITERATION_SIGN = b"it"
+    FINNISH_SIGN = b"fin"
+    START_TIME = time.time()
+
+    curr_iteration = 0
+    curr_time = 0.0
+    sensor_val = 0.0
+
+    header = ["Iteration", "Time", "Force"]
+    data = [curr_iteration, curr_time, sensor_val]
+    f = open("src/results.txt", 'w')
+    writer = csv.writer(f)
+
+    writer.writerow(header)
 
     while True:
+        curr_time = round(time.time() - START_TIME, 2)
         sensor_val = get_force_val(force_sensor)
 
         if sensor_val is not None:
@@ -63,13 +79,20 @@ def main():
                 #         print(answer)
                 #         break
 
-                # answer = arduino.readline()
-
                 if answer != b'':
-                    print(answer)
+                    print("got", answer)
 
-                if answer == b"fin" or b"fin" in answer:
+                if ITERATION_SIGN in answer:
+                    curr_iteration += 1
+                    print("NEXT ITERATION!! ", curr_iteration)
+
+                data = [curr_iteration, curr_time, sensor_val]
+                writer.writerow(data)
+
+                if FINNISH_SIGN in answer:
                     print("FINNISHED ALL ITERATIONS!")
+                    f.close()
+
                     break
 
 
