@@ -1,3 +1,4 @@
+from tabnanny import check
 import serial.tools.list_ports
 import serial
 import csv
@@ -37,8 +38,9 @@ def popup():
 
     iterations_tk = tk.IntVar()
     wanted_force_tk = tk.DoubleVar()
+    push_tk = tk.StringVar()
 
-    root.geometry("300x150")
+    root.geometry("300x200")
     root.title('Auto Strength Tester')
     main_frame = ttk.Frame(root)
     main_frame.pack(padx=10, pady=10, fill='x', expand=True)
@@ -56,13 +58,22 @@ def popup():
     wanted_force_entry = ttk.Entry(main_frame, textvariable=wanted_force_tk)
     wanted_force_entry.pack(fill='x', expand=True)
 
+    checkbox = ttk.Checkbutton(main_frame,
+                               text='Push',
+                               command=lambda: ...,
+                               variable=push_tk,
+                               onvalue='push',
+                               offvalue='pull')
+
+    checkbox.pack(fill='x', expand=True)
+
     button = ttk.Button(main_frame, text="start",
                         command=lambda: root.destroy())
     button.pack(fill='x', expand=True, pady=10)
 
     root.mainloop()
 
-    return (str(iterations_tk.get()).encode(), str(wanted_force_tk.get()).encode())
+    return (str(iterations_tk.get()).encode(), str(wanted_force_tk.get()).encode(), push_tk.get())
 
 
 def main():
@@ -76,7 +87,7 @@ def main():
 
     force_sensor = serial.Serial(find_port(SENSOR_VID_PID), 115200)
 
-    ITERATIONS, WANTED_FORCE = popup()
+    ITERATIONS, WANTED_FORCE, PUSH = popup()
 
     # print("Enter number of iterations: ")
     # ITERATIONS = input().encode()
@@ -86,14 +97,24 @@ def main():
     arduino.reset_input_buffer()
     arduino.reset_output_buffer()
 
-    print("sent: ", ITERATIONS, " - ", WANTED_FORCE)
+    PUSH_SEND = b'1' if PUSH == 'push' else b'2'
 
+    print("sent: ", ITERATIONS, " - ", WANTED_FORCE,
+          " - ", PUSH_SEND)
+
+    # sending data to arduino
     arduino.write(b'<')
     arduino.write(ITERATIONS)
     arduino.write(b'>')
     arduino.write(b'\n')
+
     arduino.write(b'<')
     arduino.write(WANTED_FORCE)
+    arduino.write(b'>')
+    arduino.write(b'\n')
+
+    arduino.write(b'<')
+    arduino.write(PUSH_SEND)
     arduino.write(b'>')
 
     # answer = b""

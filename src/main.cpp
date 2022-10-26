@@ -9,7 +9,17 @@ const int MOTOR_PWM_PIN = 10;
 const int MOTOR_DIR_PIN = 12;
 const int ENCODER_PIN_A = 3;
 const int ENCODER_PIN_B = 5;
+
 int iterations = 0;
+
+enum State
+{
+    PUSH = 1,
+    PULL = 2,
+    N
+};
+
+State state = State::N;
 
 const byte buffSize = 40;
 char messageFromPC[buffSize] = {0};
@@ -123,19 +133,45 @@ double recvWithStartEndMarkers()
 
 void get_init_data()
 {
-    while (wanted_force == 0 || iterations == 0)
+    while (wanted_force == 0 || iterations == 0 || state == State::N)
     {
         if (iterations == 0)
         {
             iterations = recvWithStartEndMarkers();
             newData = false;
         }
-        wanted_force = recvWithStartEndMarkers();
+        else if (wanted_force == 0)
+        {
+            wanted_force = recvWithStartEndMarkers();
+            newData = false;
+        }
+        else if (state == State::N)
+        {
+            int state_tmp = recvWithStartEndMarkers();
+
+            if (state_tmp == 1)
+            {
+                state = State::PUSH;
+            }
+            else if (state_tmp == 2)
+            {
+                state = State::PULL;
+            }
+            // state = (recvWithStartEndMarkers() == 1 ? State::PUSH : State::PULL);
+        }
+
+        // Serial.print(iterations);
+        // Serial.print("---");
+        // Serial.print((int)wanted_force);
+        // Serial.print("---");
+        // Serial.println(state);
     }
 
     Serial.write(iterations);
     Serial.write("---");
     Serial.write((int)wanted_force);
+    Serial.write("---");
+    Serial.write(state);
 }
 
 void setup()
