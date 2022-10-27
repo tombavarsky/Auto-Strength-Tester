@@ -143,7 +143,7 @@ def main():
 
     header = ["Iteration", "Time", "Force"]
     data = [curr_iteration, curr_time, sensor_val]
-    f = open("src/results.txt", 'w')
+    f = open("src/results.txt", 'w', newline='')
     writer = csv.writer(f)
 
     writer.writerow(header)
