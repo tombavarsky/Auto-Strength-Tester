@@ -6,10 +6,6 @@ import time
 import tkinter as tk
 from tkinter import ttk
 
-SENSOR_VID_PID = "VID:PID=0483:5740"
-ARDUINO_VID_PID = "VID:PID=2341:0043"
-no_arduino = False
-
 
 def find_port(VID_PID):
     for port in serial.tools.list_ports.comports():
@@ -88,6 +84,27 @@ def popup():
 
 
 def main():
+    SENSOR_VID_PID = "VID:PID=0483:5740"
+    ARDUINO_VID_PID = "VID:PID=2341:0043"
+    ITERATION_SIGN = b"it"
+    FINNISH_SIGN = b"fin"
+    START_TIME = time.time()
+    WRITE_RESOLUTION = 0.00
+
+    write_time = 0
+    no_arduino = False
+
+    curr_iteration = 0
+    curr_time = 0.0
+    sensor_val = 0.0
+
+    header = ["Iteration", "Time", "Force"]
+    data = [curr_iteration, curr_time, sensor_val]
+    f = open("C:/Users/user/Documents/PlatformIO/Projects/Auto-Strength-Tester/src/results.txt", 'w', newline='')
+    writer = csv.writer(f)
+
+    writer.writerow(header)
+
     try:
         arduino = serial.Serial(
             find_port(ARDUINO_VID_PID), 115200, write_timeout=0, timeout=1)
@@ -99,6 +116,9 @@ def main():
     force_sensor = serial.Serial(find_port(SENSOR_VID_PID), 115200)
 
     ITERATIONS, WANTED_FORCE, PUSH = popup()
+
+    if ITERATIONS == b'0' or WANTED_FORCE == b'0.0':
+        return
 
     print("push: ", PUSH)
 
@@ -129,24 +149,6 @@ def main():
     arduino.write(b'<')
     arduino.write(PUSH_SEND)
     arduino.write(b'>')
-
-    # answer = b""
-    ITERATION_SIGN = b"it"
-    FINNISH_SIGN = b"fin"
-    START_TIME = time.time()
-    WRITE_RESOLUTION = 0.0005
-    write_time = 0
-
-    curr_iteration = 0
-    curr_time = 0.0
-    sensor_val = 0.0
-
-    header = ["Iteration", "Time", "Force"]
-    data = [curr_iteration, curr_time, sensor_val]
-    f = open("src/results.txt", 'w', newline='')
-    writer = csv.writer(f)
-
-    writer.writerow(header)
 
     while True:
         curr_time = round(time.time() - START_TIME, 2)

@@ -193,6 +193,7 @@ void setup()
 
     myPID.SetMode(AUTOMATIC);
     myPID.SetOutputLimits(0, 255);
+    myPID.SetSampleTime(20);
 
     get_init_data();
 
