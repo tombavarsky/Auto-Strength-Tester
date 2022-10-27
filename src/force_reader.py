@@ -121,7 +121,7 @@ def main():
     ITERATION_SIGN = b"it"
     FINNISH_SIGN = b"fin"
     START_TIME = time.time()
-    WRITE_RESULUTION = 0.00
+    WRITE_RESOLUTION = 0.0005
     write_time = 0
 
     curr_iteration = 0
@@ -141,7 +141,7 @@ def main():
 
         if sensor_val is not None:
             sensor_val = sensor_val[:sensor_val.find('N')]
-            # print(sensor_val)
+            print(sensor_val)
             if not no_arduino:
                 # arduino.write('<'.encode())
                 # arduino.write(str(abs(float(sensor_val))).encode())
@@ -163,8 +163,8 @@ def main():
                     curr_iteration += 1
                     print("NEXT ITERATION!! ", curr_iteration)
 
-                data = [curr_iteration, curr_time, sensor_val]
-                if curr_time - write_time >= WRITE_RESULUTION:
+                if curr_time - write_time >= WRITE_RESOLUTION:
+                    data = [curr_iteration, curr_time, sensor_val]
                     write_time = curr_time
                     writer.writerow(data)
 
