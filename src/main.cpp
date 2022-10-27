@@ -11,6 +11,7 @@ const int ENCODER_PIN_A = 3;
 const int ENCODER_PIN_B = 5;
 
 int iterations = 0;
+bool dir = 1; // 1 - push, 0 - pull
 
 enum State
 {
@@ -38,14 +39,14 @@ void move_motor(int motor_pow, const bool backwards, const int THRESH = 0)
     // if (motor_pow < -THRESH)
     if (backwards)
     {
-        digitalWrite(MOTOR_DIR_PIN, 0);
-        myPID.SetControllerDirection(REVERSE);
+        digitalWrite(MOTOR_DIR_PIN, !dir);
+        // myPID.SetControllerDirection(REVERSE);
         // Serial.write("ba");
     }
     else // if (motor_pow > THRESH)
     {
-        myPID.SetControllerDirection(DIRECT);
-        digitalWrite(MOTOR_DIR_PIN, 1);
+        // myPID.SetControllerDirection(DIRECT);
+        digitalWrite(MOTOR_DIR_PIN, dir);
         // Serial.write("fo");
     }
 
@@ -194,6 +195,8 @@ void setup()
     myPID.SetOutputLimits(0, 255);
 
     get_init_data();
+
+    dir = state == State::PUSH; // determine the directino base on user input
 }
 
 void loop()
@@ -226,7 +229,7 @@ void loop()
         // Serial.println(force_val);
     }
 
-    // recvWithStartEndMarkers();
+    // recvWithStartEndMarkers(); // check it for extra precision
 
     // if (newData == true)
     // {
