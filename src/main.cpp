@@ -229,14 +229,13 @@ void loop()
         // Serial.println(force_val);
     }
 
-    // recvWithStartEndMarkers(); // check it for extra precision
+    // force_val = recvWithStartEndMarkers(); // check it for extra precision
 
     // if (newData == true)
     // {
-    //   // Serial.print("This just in ... ");
-    //   // Serial.println(atof(receivedChars));
-    //   force_val = (float)atof(receivedChars);
-    //   newData = false;
+    //     // Serial.print("This just in ... ");
+    //     // Serial.println(force_val);
+    //     newData = false;
     // }
 
     if (force_val == 0.0)

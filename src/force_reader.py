@@ -38,7 +38,6 @@ def popup():
 
     iterations_tk = tk.IntVar()
     wanted_force_tk = tk.DoubleVar()
-    push_tk = tk.StringVar()
 
     root.geometry("300x200")
     root.title('Auto Strength Tester')
@@ -58,14 +57,26 @@ def popup():
     wanted_force_entry = ttk.Entry(main_frame, textvariable=wanted_force_tk)
     wanted_force_entry.pack(fill='x', expand=True)
 
-    checkbox = ttk.Checkbutton(main_frame,
-                               text='Push',
-                               command=lambda: ...,
-                               variable=push_tk,
-                               onvalue='push',
-                               offvalue='pull')
+    options = ('push', 'pull')
 
-    checkbox.pack(fill='x', expand=True)
+    options_var = tk.Variable(value=options)
+
+    listbox = tk.Listbox(
+        main_frame,
+        listvariable=options_var,
+        height=2
+    )
+
+    listbox.pack(expand=True, fill=tk.BOTH)
+
+    selected_item = ""
+
+    def get_item(event):
+        nonlocal selected_item
+
+        selected_item = str(listbox.get(listbox.curselection()))
+
+    listbox.bind('<<ListboxSelect>>', get_item)
 
     button = ttk.Button(main_frame, text="start",
                         command=lambda: root.destroy())
@@ -73,7 +84,7 @@ def popup():
 
     root.mainloop()
 
-    return (str(iterations_tk.get()).encode(), str(wanted_force_tk.get()).encode(), push_tk.get())
+    return (str(iterations_tk.get()).encode(), str(wanted_force_tk.get()).encode(), selected_item.encode())
 
 
 def main():
@@ -89,6 +100,8 @@ def main():
 
     ITERATIONS, WANTED_FORCE, PUSH = popup()
 
+    print("push: ", PUSH)
+
     # print("Enter number of iterations: ")
     # ITERATIONS = input().encode()
     # print("Enter wanted force: ")
@@ -97,7 +110,7 @@ def main():
     arduino.reset_input_buffer()
     arduino.reset_output_buffer()
 
-    PUSH_SEND = b'1' if PUSH == 'push' else b'2'
+    PUSH_SEND = b'1' if PUSH == b'push' else b'2'
 
     print("sent: ", ITERATIONS, " - ", WANTED_FORCE,
           " - ", PUSH_SEND)
@@ -144,9 +157,7 @@ def main():
             print(sensor_val)
             if not no_arduino:
                 # arduino.write('<'.encode())
-                # arduino.write(str(abs(float(sensor_val))).encode())
                 arduino.write(sensor_val.encode())
-                # print(str(-1 * abs(float(sensor_val))))
                 # arduino.write('>'.encode())
                 answer = arduino.read(arduino.in_waiting)
                 # while True:
