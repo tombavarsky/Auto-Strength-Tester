@@ -6,6 +6,7 @@ import csv
 import time
 import tkinter as tk
 from tkinter import ttk
+import matplotlib.pyplot as plt
 
 
 def find_port(VID_PID):
@@ -148,6 +149,8 @@ def main():
     arduino.write(b'>')
 
     START_TIME = time.time()
+    curr_time_list = []
+    force_val_list = []
 
     while True:
         curr_time = round(time.time() - START_TIME, 4)
@@ -177,11 +180,15 @@ def main():
 
                 if curr_time - write_time >= WRITE_RESOLUTION:
                     data = [curr_iteration, curr_time, sensor_val]
+                    curr_time_list.append(curr_time)
+                    force_val_list.append(sensor_val)
                     write_time = curr_time
                     writer.writerow(data)
 
                 if FINNISH_SIGN in answer:
                     print("FINNISHED ALL ITERATIONS!")
+                    plt.plot(curr_time_list, force_val_list)
+                    plt.show()
                     f.close()
 
                     break

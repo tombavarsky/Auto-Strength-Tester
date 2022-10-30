@@ -30,7 +30,7 @@ char messageFromPC[buffSize] = {0};
 
 double wanted_force, force_val, motor_power;
 
-const float Kp = 1, Ki = 0.2, Kd = 1;
+const float Kp = 1.1, Ki = 0.4, Kd = 1.1;
 PID myPID(&force_val, &motor_power, &wanted_force, Kp, Ki, Kd, DIRECT);
 
 StaticJsonDocument<JSON_OBJECT_SIZE(3)> doc;
@@ -39,14 +39,13 @@ void move_motor(int motor_pow, const bool backwards, const int THRESH = 0)
 {
     motor_pow = max(min(motor_pow, 255), -255);
 
-    // if (motor_pow < -THRESH)
     if (backwards)
     {
         digitalWrite(MOTOR_DIR_PIN, !dir);
         // myPID.SetControllerDirection(REVERSE);
         // Serial.write("ba");
     }
-    else // if (motor_pow > THRESH)
+    else
     {
         // myPID.SetControllerDirection(DIRECT);
         digitalWrite(MOTOR_DIR_PIN, dir);
@@ -161,7 +160,6 @@ void get_init_data()
             {
                 state = State::PULL;
             }
-            // state = (recvWithStartEndMarkers() == 1 ? State::PUSH : State::PULL);
         }
 
         // Serial.print(iterations);
@@ -305,6 +303,7 @@ void loop()
         Serial.write("i");
         new_iteration = false;
         PID myPID(&force_val, &motor_power, &wanted_force, Kp, Ki, Kd, DIRECT);
+        myPID.reset_outputSum();
     }
 
     if (curr_iteration == iterations)
