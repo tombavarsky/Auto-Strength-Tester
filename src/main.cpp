@@ -10,6 +10,9 @@ const int MOTOR_DIR_PIN = 12;
 const int ENCODER_PIN_A = 3;
 const int ENCODER_PIN_B = 5;
 
+const int DELTA_FORCE_LEN = 5;
+float last_delta_forces[DELTA_FORCE_LEN];
+
 int iterations = 0;
 bool dir = 1; // 1 - push, 0 - pull
 
@@ -27,7 +30,7 @@ char messageFromPC[buffSize] = {0};
 
 double wanted_force, force_val, motor_power;
 
-const float Kp = 1, Ki = 0.5, Kd = 4;
+const float Kp = 1, Ki = 0, Kd = 4; // kp = 0.7
 PID myPID(&force_val, &motor_power, &wanted_force, Kp, Ki, Kd, DIRECT);
 
 StaticJsonDocument<JSON_OBJECT_SIZE(3)> doc;
@@ -198,6 +201,11 @@ void setup()
     get_init_data();
 
     dir = state == State::PUSH; // determine the directino base on user input
+
+    for (int i = 0; i < DELTA_FORCE_LEN; i++)
+    {
+        last_delta_forces[i] = 0;
+    }
 }
 
 void loop()
@@ -210,6 +218,10 @@ void loop()
     static const float ERR_THRESH = 0.2;
     unsigned long curr_time = millis();
     static char s_doc[128];
+    static const float DT = 0.1;
+    static float last_force_val = 0;
+    static float avg_delta_force = 0;
+    static float force_val_pred = 0;
 
     doc["time"] = curr_time / 1000;
     doc["iteration"] = curr_iteration;
@@ -226,6 +238,26 @@ void loop()
     {
         force_val = abs(Serial.parseFloat());
 
+        avg_delta_force = 0;
+
+        // precition of the real force value.
+        for (int i = 1; i < DELTA_FORCE_LEN; i++)
+        {
+            last_delta_forces[i - 1] = last_delta_forces[i];
+        }
+
+        last_delta_forces[DELTA_FORCE_LEN - 1] = force_val - last_force_val;
+
+        for (int i = 0; i < DELTA_FORCE_LEN; i++)
+        {
+            avg_delta_force += last_delta_forces[i];
+        }
+
+        avg_delta_force /= DELTA_FORCE_LEN;
+        force_val_pred = force_val + DT * avg_delta_force;
+
+        force_val = force_val_pred;
+
         // Serial.write((int)force_val); // for debug
         // Serial.println(force_val);
     }
@@ -241,12 +273,12 @@ void loop()
 
     if (force_val == 0.0)
     {
-        myPID.SetTunings(5, 0.01, 1);
+        move_motor(5 * wanted_force, false);
     }
-    else
-    {
-        myPID.SetTunings(Kp, Ki, Kd);
-    }
+    // else
+    // {
+    //     myPID.SetTunings(Kp, Ki, Kd);
+    // }
 
     // calculating motor's power
     force_err = wanted_force - force_val;
@@ -287,4 +319,5 @@ void loop()
             analogWrite(MOTOR_PWM_PIN, 0);
         }
     }
+    last_force_val = force_val;
 }

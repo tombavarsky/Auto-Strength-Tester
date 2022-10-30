@@ -152,7 +152,7 @@ def main():
     START_TIME = time.time()
 
     while True:
-        curr_time = round(time.time() - START_TIME, 2)
+        curr_time = round(time.time() - START_TIME, 4)
         sensor_val = get_force_val(force_sensor)
 
         if sensor_val is not None:
