@@ -302,7 +302,7 @@ void loop()
 
     if (new_iteration && force_val == 0)
     {
-        Serial.write("it");
+        Serial.write("i");
         new_iteration = false;
         PID myPID(&force_val, &motor_power, &wanted_force, Kp, Ki, Kd, DIRECT);
     }
@@ -310,8 +310,8 @@ void loop()
     if (curr_iteration == iterations)
     { // finnished all iterations
 
-        Serial.write("it");
-        Serial.write("finfinfin");
+        Serial.write("i");
+        Serial.write("f");
 
         iterations = 0;
         wanted_force = 0;

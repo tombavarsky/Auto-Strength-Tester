@@ -89,8 +89,8 @@ def popup():
 def main():
     SENSOR_VID_PID = "VID:PID=0483:5740"
     ARDUINO_VID_PID = "VID:PID=2341:0043"
-    ITERATION_SIGN = b"it"
-    FINNISH_SIGN = b"fin"
+    ITERATION_SIGN = b"i"
+    FINNISH_SIGN = b"f"
     WRITE_RESOLUTION = 0.00
 
     write_time = 0
@@ -123,11 +123,6 @@ def main():
         return
 
     print("push: ", PUSH)
-
-    # print("Enter number of iterations: ")
-    # ITERATIONS = input().encode()
-    # print("Enter wanted force: ")
-    # WANTED_FORCE = input().encode()
 
     arduino.reset_input_buffer()
     arduino.reset_output_buffer()
