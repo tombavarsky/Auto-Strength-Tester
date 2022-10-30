@@ -1,3 +1,4 @@
+from ast import Break
 from tabnanny import check
 import serial.tools.list_ports
 import serial
@@ -23,10 +24,6 @@ def get_force_val(sensor):
 
     if sensor_val != "":
         return sensor_val
-
-
-def b_click():
-    ...
 
 
 def popup():
@@ -66,21 +63,27 @@ def popup():
     listbox.pack(expand=True, fill=tk.BOTH)
 
     selected_item = ""
+    started = False
 
     def get_item(event):
         nonlocal selected_item
 
         selected_item = str(listbox.get(listbox.curselection()))
 
+    def b_click():
+        nonlocal started
+        started = True
+        root.destroy()
+
     listbox.bind('<<ListboxSelect>>', get_item)
 
     button = ttk.Button(main_frame, text="start",
-                        command=lambda: root.destroy())
+                        command=b_click)
     button.pack(fill='x', expand=True, pady=10)
 
     root.mainloop()
 
-    return (str(iterations_tk.get()).encode(), str(wanted_force_tk.get()).encode(), selected_item.encode())
+    return (str(iterations_tk.get()).encode(), str(wanted_force_tk.get()).encode(), selected_item.encode(), started)
 
 
 def main():
@@ -114,9 +117,9 @@ def main():
 
     force_sensor = serial.Serial(find_port(SENSOR_VID_PID), 115200)
 
-    ITERATIONS, WANTED_FORCE, PUSH = popup()
+    ITERATIONS, WANTED_FORCE, PUSH, STARTED = popup()
 
-    if ITERATIONS == b'0' or WANTED_FORCE == b'0.0':
+    if ITERATIONS == b'0' or WANTED_FORCE == b'0.0' or not STARTED:
         return
 
     print("push: ", PUSH)
