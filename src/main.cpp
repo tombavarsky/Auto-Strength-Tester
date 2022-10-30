@@ -30,7 +30,7 @@ char messageFromPC[buffSize] = {0};
 
 double wanted_force, force_val, motor_power;
 
-const float Kp = 1, Ki = 0, Kd = 4; // kp = 0.7
+const float Kp = 1, Ki = 0.2, Kd = 1;
 PID myPID(&force_val, &motor_power, &wanted_force, Kp, Ki, Kd, DIRECT);
 
 StaticJsonDocument<JSON_OBJECT_SIZE(3)> doc;
@@ -218,7 +218,7 @@ void loop()
     static const float ERR_THRESH = 0.2;
     unsigned long curr_time = millis();
     static char s_doc[128];
-    static const float DT = 0.1;
+    static const float DT = 0.6;
     static float last_force_val = 0;
     static float avg_delta_force = 0;
     static float force_val_pred = 0;
@@ -273,12 +273,13 @@ void loop()
 
     if (force_val == 0.0)
     {
-        move_motor(5 * wanted_force, false);
+        // move_motor(5 * wanted_force, false);
+        myPID.SetTunings(5, 0.01, 1);
     }
-    // else
-    // {
-    //     myPID.SetTunings(Kp, Ki, Kd);
-    // }
+    else
+    {
+        myPID.SetTunings(Kp, Ki, Kd);
+    }
 
     // calculating motor's power
     force_err = wanted_force - force_val;
@@ -293,7 +294,7 @@ void loop()
         curr_iteration++;
         new_iteration = true;
 
-        while (encoder_val < -10 || encoder_val > 10)
+        while (encoder_val < -20 || encoder_val > 20)
         {
             move_motor(encoder_val * ENCODER_KP, true);
         }
