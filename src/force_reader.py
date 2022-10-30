@@ -88,7 +88,6 @@ def main():
     ARDUINO_VID_PID = "VID:PID=2341:0043"
     ITERATION_SIGN = b"it"
     FINNISH_SIGN = b"fin"
-    START_TIME = time.time()
     WRITE_RESOLUTION = 0.00
 
     write_time = 0
@@ -149,6 +148,8 @@ def main():
     arduino.write(b'<')
     arduino.write(PUSH_SEND)
     arduino.write(b'>')
+
+    START_TIME = time.time()
 
     while True:
         curr_time = round(time.time() - START_TIME, 2)
