@@ -27,7 +27,7 @@ char messageFromPC[buffSize] = {0};
 
 double wanted_force, force_val, motor_power;
 
-const float Kp = 1, Ki = 0.8, Kd = 4;
+const float Kp = 1, Ki = 0.5, Kd = 4;
 PID myPID(&force_val, &motor_power, &wanted_force, Kp, Ki, Kd, DIRECT);
 
 StaticJsonDocument<JSON_OBJECT_SIZE(3)> doc;
