@@ -282,7 +282,7 @@ void loop()
     }
     else
     {
-        move_motor(motor_power, wanted_force < force_val);
+        move_motor(motor_power, force_err < ERR_THRESH);
         // myPID.SetTunings(Kp, Ki, Kd);
     }
 
