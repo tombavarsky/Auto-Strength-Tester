@@ -10,7 +10,7 @@ const int MOTOR_DIR_PIN = 12;
 const int ENCODER_PIN_A = 3;
 const int ENCODER_PIN_B = 5;
 
-const int DELTA_FORCE_LEN = 5;
+const int DELTA_FORCE_LEN = 7;
 float last_delta_forces[DELTA_FORCE_LEN];
 
 int iterations = 0;

@@ -181,7 +181,7 @@ def main():
                 if curr_time - write_time >= WRITE_RESOLUTION:
                     data = [curr_iteration, curr_time, sensor_val]
                     curr_time_list.append(curr_time)
-                    force_val_list.append(sensor_val)
+                    force_val_list.append(abs(float(sensor_val)))
                     write_time = curr_time
                     writer.writerow(data)
 
