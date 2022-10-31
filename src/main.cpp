@@ -10,7 +10,7 @@ const int MOTOR_DIR_PIN = 12;
 const int ENCODER_PIN_A = 3;
 const int ENCODER_PIN_B = 5;
 
-const int DELTA_FORCE_LEN = 7;
+const int DELTA_FORCE_LEN = 5;
 float last_delta_forces[DELTA_FORCE_LEN];
 
 int iterations = 0;
@@ -301,8 +301,9 @@ void loop()
     {
         Serial.write("i");
         new_iteration = false;
-        PID myPID(&force_val, &motor_power, &wanted_force, Kp, Ki, Kd, DIRECT);
-        myPID.reset_outputSum();
+        myPID.SetOutputLimits(0.0, 1.0);  // Forces minimum up to 0.0
+        myPID.SetOutputLimits(-1.0, 0.0); // Forces maximum down to 0.0
+        myPID.SetOutputLimits(0, 255);    // Set the limits back to normal
     }
 
     if (curr_iteration == iterations)
