@@ -269,23 +269,22 @@ void loop()
     //     newData = false;
     // }
 
-    if (force_val == 0.0)
-    {
-        // move_motor(5 * wanted_force, false);
-        myPID.SetTunings(5, 0.01, 1);
-    }
-    else
-    {
-        myPID.SetTunings(Kp, Ki, Kd);
-    }
-
     // calculating motor's power
     force_err = wanted_force - force_val;
     myPID.Compute();
 
     // Serial.write(int(force_val));
 
-    move_motor(motor_power, wanted_force < force_val);
+    if (force_val == 0.0)
+    {
+        move_motor(5 * wanted_force, false);
+        // myPID.SetTunings(5, 0.01, 1);
+    }
+    else
+    {
+        move_motor(motor_power, wanted_force < force_val);
+        // myPID.SetTunings(Kp, Ki, Kd);
+    }
 
     if (force_err < ERR_THRESH && !new_iteration)
     { // reached wanted force and therefore finnished the iteration.
