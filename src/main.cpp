@@ -1,7 +1,6 @@
 #include <Arduino.h>
 #include <EnableInterrupt.h>
 #include <PID_v1.h>
-#include <ArduinoJson.h>
 
 volatile long encoder_val = 0;
 
@@ -30,10 +29,8 @@ char messageFromPC[buffSize] = {0};
 
 double wanted_force, force_val, motor_power;
 
-const float Kp = 1.1, Ki = 0.4, Kd = 1.1;
+const float Kp = 0.7, Ki = 0.4, Kd = 1.5;
 PID myPID(&force_val, &motor_power, &wanted_force, Kp, Ki, Kd, DIRECT);
-
-StaticJsonDocument<JSON_OBJECT_SIZE(3)> doc;
 
 void move_motor(int motor_pow, const bool backwards, const int THRESH = 0)
 {
@@ -214,18 +211,10 @@ void loop()
 
     static const float ENCODER_KP = 1.6;
     static const float ERR_THRESH = 0.2;
-    unsigned long curr_time = millis();
-    static char s_doc[128];
     static const float DT = 0.6;
     static float last_force_val = 0;
     static float avg_delta_force = 0;
     static float force_val_pred = 0;
-
-    doc["time"] = curr_time / 1000;
-    doc["iteration"] = curr_iteration;
-    doc["force"] = force_val;
-
-    serializeJson(doc, s_doc);
 
     // while (true)
     // {
