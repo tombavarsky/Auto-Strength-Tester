@@ -29,24 +29,20 @@ char messageFromPC[buffSize] = {0};
 
 double wanted_force, force_val, motor_power;
 
-const float Kp = 7, Ki = 0, Kd = 0.2;
+const float Kp = 7.1, Ki = 0, Kd = 0.2;
 PID myPID(&force_val, &motor_power, &wanted_force, Kp, Ki, Kd, DIRECT);
 
-void move_motor(int motor_pow, const bool backwards, const int THRESH = 0)
+void move_motor(int motor_pow, const bool backwards)
 {
     motor_pow = max(min(motor_pow, 255), -255);
 
     if (backwards)
     {
         digitalWrite(MOTOR_DIR_PIN, !dir);
-        // myPID.SetControllerDirection(REVERSE);
-        // Serial.write("ba");
     }
     else
     {
-        // myPID.SetControllerDirection(DIRECT);
         digitalWrite(MOTOR_DIR_PIN, dir);
-        // Serial.write("fo");
     }
 
     analogWrite(MOTOR_PWM_PIN, abs(motor_pow));
@@ -276,7 +272,6 @@ void loop()
         { // first run is slow
             move_motor(2 * wanted_force, false);
         }
-        // myPID.SetTunings(5, 0.01, 1);
     }
     else
     {
@@ -286,7 +281,6 @@ void loop()
         }
 
         move_motor(motor_power, force_err < ERR_THRESH);
-        // myPID.SetTunings(Kp, Ki, Kd);
     }
 
     if (force_err < ERR_THRESH)

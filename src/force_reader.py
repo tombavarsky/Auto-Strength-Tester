@@ -1,7 +1,3 @@
-from ast import Break
-from math import ceil
-from tabnanny import check
-from matplotlib.font_manager import font_scalings
 import numpy as np
 import serial.tools.list_ports
 import serial
