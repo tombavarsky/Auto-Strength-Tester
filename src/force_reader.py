@@ -187,9 +187,11 @@ def main():
 
                 if FINNISH_SIGN in answer:
                     print("FINNISHED ALL ITERATIONS!")
+                    f.close()
+                    arduino.close()
+                    force_sensor.close()
                     plt.plot(curr_time_list, force_val_list)
                     plt.show()
-                    f.close()
 
                     break
 
