@@ -29,7 +29,7 @@ char messageFromPC[buffSize] = {0};
 
 double wanted_force, force_val, motor_power;
 
-const float Kp = 0.7, Ki = 0.4, Kd = 1.5;
+const float Kp = 7.2, Ki = 0, Kd = 0.2;
 PID myPID(&force_val, &motor_power, &wanted_force, Kp, Ki, Kd, DIRECT);
 
 void move_motor(int motor_pow, const bool backwards, const int THRESH = 0)
@@ -209,12 +209,13 @@ void loop()
     static bool new_iteration = false;
     static float force_err = 0;
 
-    static const float ENCODER_KP = 1.6;
-    static const float ERR_THRESH = 0.2;
+    static const float ENCODER_KP = 1.3;
+    static const float ERR_THRESH = 0.3;
     static const float DT = 0.6;
     static float last_force_val = 0;
     static float avg_delta_force = 0;
     static float force_val_pred = 0;
+    static int touch_encoder_val = 0;
 
     // while (true)
     // {
@@ -227,7 +228,7 @@ void loop()
 
         avg_delta_force = 0;
 
-        // precition of the real force value.
+        // predicition of the real force value.
         for (int i = 1; i < DELTA_FORCE_LEN; i++)
         {
             last_delta_forces[i - 1] = last_delta_forces[i];
@@ -266,19 +267,34 @@ void loop()
 
     if (force_val == 0.0)
     {
-        move_motor(5 * wanted_force, false);
+        if (curr_iteration > 0)
+        { // now that we know the encoder value where force is applied, we can target to that value
+            move_motor(ENCODER_KP * (touch_encoder_val - encoder_val + 10), false);
+        }
+        else
+        { // first run is slow
+            move_motor(2 * wanted_force, false);
+        }
         // myPID.SetTunings(5, 0.01, 1);
     }
     else
     {
+        if (curr_iteration == 0)
+        {
+            touch_encoder_val = encoder_val;
+        }
+
         move_motor(motor_power, force_err < ERR_THRESH);
         // myPID.SetTunings(Kp, Ki, Kd);
     }
 
-    if (force_err < ERR_THRESH && !new_iteration)
+    if (force_err < ERR_THRESH)
     { // reached wanted force and therefore finnished the iteration.
-        curr_iteration++;
-        new_iteration = true;
+        if (!new_iteration)
+        {
+            curr_iteration++;
+            new_iteration = true;
+        }
 
         while (encoder_val < -20 || encoder_val > 20)
         {
@@ -286,9 +302,9 @@ void loop()
         }
     }
 
-    if (new_iteration && force_val == 0)
+    if (new_iteration && (encoder_val < touch_encoder_val || force_val < 0.1 * wanted_force))
     {
-        Serial.write("i");
+        Serial.write("i---------------------------");
         new_iteration = false;
         myPID.SetOutputLimits(0.0, 1.0);  // Forces minimum up to 0.0
         myPID.SetOutputLimits(-1.0, 0.0); // Forces maximum down to 0.0

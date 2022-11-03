@@ -1,5 +1,6 @@
 from ast import Break
 from tabnanny import check
+import numpy as np
 import serial.tools.list_ports
 import serial
 import csv
