@@ -1,5 +1,7 @@
 from ast import Break
+from math import ceil
 from tabnanny import check
+from matplotlib.font_manager import font_scalings
 import numpy as np
 import serial.tools.list_ports
 import serial
@@ -101,6 +103,8 @@ def main():
     curr_iteration = 0
     curr_time = 0.0
     sensor_val = 0.0
+    last_sensor_val = 0.0
+    last_last_sensor_val = 0.0
 
     header = ["Iteration", "Time", "Force"]
     data = [curr_iteration, curr_time, sensor_val]
@@ -160,6 +164,13 @@ def main():
         if sensor_val is not None:
             sensor_val = sensor_val[:sensor_val.find('N')]
             print(sensor_val)
+            if (float(last_sensor_val) == 0 and float(sensor_val) != 0) or (float(last_last_sensor_val) == 0 and float(last_sensor_val) != 0 and float(sensor_val) != 0):
+                last_sensor_val = sensor_val
+                last_last_sensor_val = last_sensor_val
+                sensor_val = 0
+
+                continue
+
             if not no_arduino:
                 # arduino.write('<'.encode())
                 arduino.write(sensor_val.encode())
@@ -191,12 +202,20 @@ def main():
                     f.close()
                     arduino.close()
                     force_sensor.close()
-                    plt.xticks(np.arange(0, max(curr_time_list), 0.5))
-                    plt.yticks(np.arange(0, max(force_val_list), 0.5))
+
+                    fig, ax = plt.subplots()
+                    plt.xticks(np.arange(0, max(curr_time_list) + 1, 1))
+                    plt.yticks(np.arange(0, max(force_val_list) + 1, 0.5))
+                    plt.setp(ax.get_xticklabels(), fontsize=7)
+                    plt.setp(ax.get_yticklabels(), fontsize=6)
+
                     plt.plot(curr_time_list, force_val_list)
+                    plt.grid(True)
                     plt.show()
 
                     break
+            last_sensor_val = sensor_val
+            last_last_sensor_val = last_sensor_val
 
 
 main()

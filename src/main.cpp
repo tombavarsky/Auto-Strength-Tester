@@ -29,7 +29,7 @@ char messageFromPC[buffSize] = {0};
 
 double wanted_force, force_val, motor_power;
 
-const float Kp = 7.2, Ki = 0, Kd = 0.2;
+const float Kp = 7, Ki = 0, Kd = 0.2;
 PID myPID(&force_val, &motor_power, &wanted_force, Kp, Ki, Kd, DIRECT);
 
 void move_motor(int motor_pow, const bool backwards, const int THRESH = 0)
@@ -209,9 +209,10 @@ void loop()
     static bool new_iteration = false;
     static float force_err = 0;
 
-    static const float ENCODER_KP = 1.3;
-    static const float ERR_THRESH = 0.3;
+    static const float ENCODER_KP = 0.8;
+    static const float ERR_THRESH = 0.2;
     static const float DT = 0.6;
+    static const int FIRST_MOVE_SPEED = 40;
     static float last_force_val = 0;
     static float avg_delta_force = 0;
     static float force_val_pred = 0;
@@ -269,7 +270,7 @@ void loop()
     {
         if (curr_iteration > 0)
         { // now that we know the encoder value where force is applied, we can target to that value
-            move_motor(ENCODER_KP * (touch_encoder_val - encoder_val + 10), false);
+            move_motor((ENCODER_KP * (touch_encoder_val - encoder_val)) + 5, false);
         }
         else
         { // first run is slow
@@ -279,7 +280,7 @@ void loop()
     }
     else
     {
-        if (curr_iteration == 0)
+        if (curr_iteration == 0 && force_val >= 3)
         {
             touch_encoder_val = encoder_val;
         }
