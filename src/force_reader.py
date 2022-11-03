@@ -190,6 +190,8 @@ def main():
                     f.close()
                     arduino.close()
                     force_sensor.close()
+                    plt.xticks(np.arange(0, max(curr_time_list), 0.5))
+                    plt.yticks(np.arange(0, max(force_val_list), 0.5))
                     plt.plot(curr_time_list, force_val_list)
                     plt.show()
 
