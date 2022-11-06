@@ -175,6 +175,8 @@ void get_init_data()
     Serial.write((int)wanted_force);
     Serial.write("---");
     Serial.write(state);
+    Serial.write("---");
+    Serial.write(ticks);
 }
 
 void setup()
@@ -229,7 +231,8 @@ void loop()
 
     if (Serial.available() > 0)
     {
-        force_val = abs(Serial.parseFloat());
+        force_val = Serial.parseFloat();
+        force_val = abs(force_val);
 
         avg_delta_force = 0;
 
