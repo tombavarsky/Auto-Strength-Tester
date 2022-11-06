@@ -29,7 +29,7 @@ char messageFromPC[buffSize] = {0};
 
 double wanted_force, force_val, motor_power;
 
-const float Kp = 7.1, Ki = 0, Kd = 0.2;
+const float Kp = 7.3, Ki = 0, Kd = 0.2;
 PID myPID(&force_val, &motor_power, &wanted_force, Kp, Ki, Kd, DIRECT);
 
 void move_motor(int motor_pow, const bool backwards)
@@ -191,7 +191,7 @@ void setup()
 
     get_init_data();
 
-    dir = state == State::PUSH; // determine the directino base on user input
+    dir = state == State::PUSH; // determine the direction base on user input
 
     for (int i = 0; i < DELTA_FORCE_LEN; i++)
     {
@@ -266,7 +266,8 @@ void loop()
     {
         if (curr_iteration > 0)
         { // now that we know the encoder value where force is applied, we can target to that value
-            move_motor((ENCODER_KP * (touch_encoder_val - encoder_val)) + 5, false);
+            int motor_free_speed = max(ENCODER_KP * (touch_encoder_val - encoder_val), motor_power);
+            move_motor(motor_free_speed, false);
         }
         else
         { // first run is slow
