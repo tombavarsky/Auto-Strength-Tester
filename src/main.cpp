@@ -217,7 +217,7 @@ void loop()
 
     static const float ENCODER_KP = 1.6;
     static const float ERR_THRESH = 0.2;
-    static const float DT = 0.4;
+    static const float DT = 0.2;
     static const int FIRST_MOVE_SPEED = 30;
     static float last_force_val = 0;
     static float avg_delta_force = 0;
@@ -305,7 +305,7 @@ void loop()
 
         int encoder_stop_val = (abs(touch_encoder_val) - ticks) * (abs(touch_encoder_val) / touch_encoder_val);
 
-        while (abs(encoder_val) < abs(encoder_stop_val) - 40 || abs(encoder_val) > abs(encoder_stop_val) + 40)
+        while (abs(encoder_val) < abs(encoder_stop_val) - 20 || abs(encoder_val) > abs(encoder_stop_val) + 20)
         {
             move_motor((abs(encoder_val) - encoder_stop_val) * ENCODER_KP * 2, true);
         }

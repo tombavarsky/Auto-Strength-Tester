@@ -7,6 +7,8 @@ import tkinter as tk
 from tkinter import ttk
 import matplotlib.pyplot as plt
 
+MM_TO_MOTOR_TICKS = 537.7 / 3
+
 
 def find_port(VID_PID):
     for port in serial.tools.list_ports.comports():
@@ -31,7 +33,7 @@ def popup():
 
     iterations_tk = tk.IntVar()
     wanted_force_tk = tk.DoubleVar()
-    ticks_tk = tk.IntVar(value=500)
+    ticks_tk = tk.DoubleVar(value=537.7 / MM_TO_MOTOR_TICKS)
 
     root.geometry("300x300")
     root.title('Auto Strength Tester')
@@ -97,14 +99,14 @@ def popup():
         main_frame, text="customize", variable=checkbox_value, command=change_state)
     checkbox.pack(fill='x', expand=True, pady=10)
 
-    ticks_label = ttk.Label(main_frame, text="Ticks:")
+    ticks_label = ttk.Label(main_frame, text="mm:")
     ticks_label.pack(fill='x', expand=True)
 
     ticks_entry.pack(fill='x', expand=True)
 
     root.mainloop()
 
-    return (str(iterations_tk.get()).encode(), str(wanted_force_tk.get()).encode(), selected_item.encode(), started, str(ticks_tk.get()).encode())
+    return (str(iterations_tk.get()).encode(), str(wanted_force_tk.get()).encode(), selected_item.encode(), started, ticks_tk.get())
 
 
 def main():
@@ -140,7 +142,8 @@ def main():
 
     force_sensor = serial.Serial(find_port(SENSOR_VID_PID), 115200)
 
-    ITERATIONS, WANTED_FORCE, PUSH, STARTED, TICKS = popup()
+    ITERATIONS, WANTED_FORCE, PUSH, STARTED, MM = popup()
+    TICKS = str(MM * MM_TO_MOTOR_TICKS).encode()
 
     if ITERATIONS == b'0' or WANTED_FORCE == b'0.0' or not STARTED:
         return
@@ -232,6 +235,8 @@ def main():
 
                     plt.plot(curr_time_list, force_val_list)
                     plt.grid(True)
+                    plt.subplots_adjust(left=0.05, right=0.95,
+                                        top=0.95, bottom=0.05)
                     plt.show()
 
                     break
