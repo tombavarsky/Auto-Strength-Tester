@@ -28,6 +28,7 @@ const byte buffSize = 40;
 char messageFromPC[buffSize] = {0};
 
 double wanted_force, force_val, motor_power;
+int ticks = 0;
 
 const float Kp = 7.3, Ki = 0, Kd = 0.2;
 PID myPID(&force_val, &motor_power, &wanted_force, Kp, Ki, Kd, DIRECT);
@@ -129,7 +130,7 @@ double recvWithStartEndMarkers()
 
 void get_init_data()
 {
-    while (wanted_force == 0 || iterations == 0 || state == State::N)
+    while (wanted_force == 0 || iterations == 0 || state == State::N || ticks == 0)
     {
         if (iterations == 0)
         {
@@ -153,13 +154,20 @@ void get_init_data()
             {
                 state = State::PULL;
             }
+            newData = false;
+        }
+        else if (ticks == 0)
+        {
+            ticks = recvWithStartEndMarkers();
         }
 
         // Serial.print(iterations);
         // Serial.print("---");
         // Serial.print((int)wanted_force);
         // Serial.print("---");
-        // Serial.println(state);
+        // Serial.print(state);
+        // Serial.print("---");
+        // Serial.println(ticks);
     }
 
     Serial.write(iterations);
@@ -205,10 +213,10 @@ void loop()
     static bool new_iteration = false;
     static float force_err = 0;
 
-    static const float ENCODER_KP = 0.8;
+    static const float ENCODER_KP = 1.6;
     static const float ERR_THRESH = 0.2;
-    static const float DT = 0.6;
-    static const int FIRST_MOVE_SPEED = 40;
+    static const float DT = 0.4;
+    static const int FIRST_MOVE_SPEED = 30;
     static float last_force_val = 0;
     static float avg_delta_force = 0;
     static float force_val_pred = 0;
@@ -266,12 +274,12 @@ void loop()
     {
         if (curr_iteration > 0)
         { // now that we know the encoder value where force is applied, we can target to that value
-            int motor_free_speed = max(ENCODER_KP * (touch_encoder_val - encoder_val), motor_power);
+            int motor_free_speed = max(ENCODER_KP * abs(touch_encoder_val - encoder_val), motor_power);
             move_motor(motor_free_speed, false);
         }
         else
         { // first run is slow
-            move_motor(2 * wanted_force, false);
+            move_motor(max(2 * wanted_force, FIRST_MOVE_SPEED), false);
         }
     }
     else
@@ -292,9 +300,11 @@ void loop()
             new_iteration = true;
         }
 
-        while (encoder_val < -20 || encoder_val > 20)
+        int encoder_stop_val = (abs(touch_encoder_val) - ticks) * (abs(touch_encoder_val) / touch_encoder_val);
+
+        while (abs(encoder_val) < abs(encoder_stop_val) - 40 || abs(encoder_val) > abs(encoder_stop_val) + 40)
         {
-            move_motor(encoder_val * ENCODER_KP, true);
+            move_motor((abs(encoder_val) - encoder_stop_val) * ENCODER_KP * 2, true);
         }
     }
 

@@ -31,8 +31,9 @@ def popup():
 
     iterations_tk = tk.IntVar()
     wanted_force_tk = tk.DoubleVar()
+    ticks_tk = tk.IntVar(value=500)
 
-    root.geometry("300x200")
+    root.geometry("300x300")
     root.title('Auto Strength Tester')
     main_frame = ttk.Frame(root)
     main_frame.pack(padx=10, pady=10, fill='x', expand=True)
@@ -41,13 +42,15 @@ def popup():
     iterations_label.pack(fill='x', expand=True)
 
     iterations_entry = ttk.Entry(main_frame, textvariable=iterations_tk)
+    iterations_entry.icursor(1)
     iterations_entry.pack(fill='x', expand=True)
     iterations_entry.focus()
 
     wanted_force_label = ttk.Label(main_frame, text="Force:")
     wanted_force_label.pack(fill='x', expand=True)
 
-    wanted_force_entry = ttk.Entry(main_frame, textvariable=wanted_force_tk)
+    wanted_force_entry = ttk.Entry(
+        main_frame, textvariable=wanted_force_tk)
     wanted_force_entry.pack(fill='x', expand=True)
 
     options = ('push', 'pull')
@@ -75,15 +78,33 @@ def popup():
         started = True
         root.destroy()
 
+    ticks_entry = ttk.Entry(
+        main_frame, textvariable=ticks_tk, state=tk.DISABLED)
+
+    def change_state():
+        if checkbox_value.get() == 0:
+            ticks_entry.config(state=tk.DISABLED)
+        else:
+            ticks_entry.config(state=tk.NORMAL)
+
     listbox.bind('<<ListboxSelect>>', get_item)
 
-    button = ttk.Button(main_frame, text="start",
-                        command=b_click)
+    button = ttk.Button(main_frame, text="start", command=b_click)
     button.pack(fill='x', expand=True, pady=10)
+
+    checkbox_value = tk.IntVar()
+    checkbox = tk.Checkbutton(
+        main_frame, text="customize", variable=checkbox_value, command=change_state)
+    checkbox.pack(fill='x', expand=True, pady=10)
+
+    ticks_label = ttk.Label(main_frame, text="Ticks:")
+    ticks_label.pack(fill='x', expand=True)
+
+    ticks_entry.pack(fill='x', expand=True)
 
     root.mainloop()
 
-    return (str(iterations_tk.get()).encode(), str(wanted_force_tk.get()).encode(), selected_item.encode(), started)
+    return (str(iterations_tk.get()).encode(), str(wanted_force_tk.get()).encode(), selected_item.encode(), started, str(ticks_tk.get()).encode())
 
 
 def main():
@@ -119,7 +140,7 @@ def main():
 
     force_sensor = serial.Serial(find_port(SENSOR_VID_PID), 115200)
 
-    ITERATIONS, WANTED_FORCE, PUSH, STARTED = popup()
+    ITERATIONS, WANTED_FORCE, PUSH, STARTED, TICKS = popup()
 
     if ITERATIONS == b'0' or WANTED_FORCE == b'0.0' or not STARTED:
         return
@@ -147,6 +168,10 @@ def main():
 
     arduino.write(b'<')
     arduino.write(PUSH_SEND)
+    arduino.write(b'>')
+
+    arduino.write(b'<')
+    arduino.write(TICKS)
     arduino.write(b'>')
 
     START_TIME = time.time()
