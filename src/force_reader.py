@@ -196,9 +196,9 @@ def main():
                 continue
 
             if not no_arduino:
-                # arduino.write('<'.encode())
+                arduino.write('<'.encode())
                 arduino.write(sensor_val.encode())
-                # arduino.write('>'.encode())
+                arduino.write('>'.encode())
                 answer = arduino.read(arduino.in_waiting)
                 # while True:
                 #     answer += arduino.read()
@@ -231,12 +231,12 @@ def main():
                     plt.xticks(np.arange(0, max(curr_time_list) + 1, 1))
                     plt.yticks(np.arange(0, max(force_val_list) + 1, 0.5))
                     plt.setp(ax.get_xticklabels(), fontsize=7)
-                    plt.setp(ax.get_yticklabels(), fontsize=6)
+                    plt.setp(ax.get_yticklabels(), fontsize=5)
 
                     plt.plot(curr_time_list, force_val_list)
                     plt.grid(True)
                     plt.subplots_adjust(left=0.05, right=0.95,
-                                        top=0.95, bottom=0.05)
+                                        top=1, bottom=0.05)
                     plt.show()
 
                     break

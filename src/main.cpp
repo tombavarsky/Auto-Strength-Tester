@@ -30,7 +30,7 @@ char messageFromPC[buffSize] = {0};
 double wanted_force, force_val, motor_power;
 int ticks = 0;
 
-const float Kp = 7.3, Ki = 0, Kd = 0.2;
+const float Kp = 1.5, Ki = 0, Kd = 0;
 PID myPID(&force_val, &motor_power, &wanted_force, Kp, Ki, Kd, DIRECT);
 
 void move_motor(int motor_pow, const bool backwards)
@@ -159,6 +159,7 @@ void get_init_data()
         else if (ticks == 0)
         {
             ticks = recvWithStartEndMarkers();
+            newData = false;
         }
 
         // Serial.print(iterations);
@@ -217,7 +218,7 @@ void loop()
 
     static const float ENCODER_KP = 1.6;
     static const float ERR_THRESH = 0.2;
-    static const float DT = 0.2;
+    static const float DT = 0.1;
     static const int FIRST_MOVE_SPEED = 30;
     static float last_force_val = 0;
     static float avg_delta_force = 0;
@@ -231,8 +232,17 @@ void loop()
 
     if (Serial.available() > 0)
     {
-        force_val = Serial.parseFloat();
+        // force_val = Serial.parseFloat();
+
+        force_val = recvWithStartEndMarkers();
         force_val = abs(force_val);
+
+        if (newData == true)
+        {
+            // Serial.print("This just in ... ");
+            // Serial.println(force_val);
+            newData = false;
+        }
 
         avg_delta_force = 0;
 
@@ -257,15 +267,6 @@ void loop()
         // Serial.write((int)force_val); // for debug
         // Serial.println(force_val);
     }
-
-    // force_val = recvWithStartEndMarkers(); // check it for extra precision
-
-    // if (newData == true)
-    // {
-    //     // Serial.print("This just in ... ");
-    //     // Serial.println(force_val);
-    //     newData = false;
-    // }
 
     // calculating motor's power
     force_err = wanted_force - force_val;
