@@ -30,7 +30,7 @@ char messageFromPC[buffSize] = {0};
 double wanted_force, force_val, motor_power;
 int ticks = 0;
 
-const float Kp = 7.3, Ki = 0, Kd = 0.2;
+const float Kp = 7, Ki = 0, Kd = 0.2;
 PID myPID(&force_val, &motor_power, &wanted_force, Kp, Ki, Kd, DIRECT);
 
 void move_motor(int motor_pow, const bool backwards)
@@ -217,7 +217,7 @@ void loop()
 
     static const float ENCODER_KP = 1.6;
     static const float ERR_THRESH = 0.2;
-    static const float DT = 0.2;
+    static const float DT = 0.25;
     static const int FIRST_MOVE_SPEED = 30;
     static float last_force_val = 0;
     static float avg_delta_force = 0;

@@ -200,12 +200,6 @@ def main():
                 arduino.write(sensor_val.encode())
                 # arduino.write('>'.encode())
                 answer = arduino.read(arduino.in_waiting)
-                # while True:
-                #     answer += arduino.read()
-
-                #     if b"\n" in answer:
-                #         print(answer)
-                #         break
 
                 if answer != b'':
                     print("got", answer)
@@ -234,12 +228,15 @@ def main():
                     plt.setp(ax.get_yticklabels(), fontsize=6)
 
                     plt.plot(curr_time_list, force_val_list)
+                    plt.axhline(y=float(WANTED_FORCE),
+                                color='r', linestyle=':')
                     plt.grid(True)
                     plt.subplots_adjust(left=0.05, right=0.95,
                                         top=0.95, bottom=0.05)
                     plt.show()
 
                     break
+
             last_sensor_val = sensor_val
             last_last_sensor_val = last_sensor_val
 
