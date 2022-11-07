@@ -30,8 +30,8 @@ char messageFromPC[buffSize] = {0};
 double wanted_force, force_val, motor_power;
 int ticks = 0;
 
-const float Kp = 7, Ki = 0, Kd = 0.2;
-PID myPID(&force_val, &motor_power, &wanted_force, Kp, Ki, Kd, DIRECT);
+const float Kp = 7.5, Ki = 0, Kd = 0.9;
+PID myPID(&force_val, &motor_power, &wanted_force, Kp, Ki, Kd, P_ON_E, DIRECT);
 
 void move_motor(int motor_pow, const bool backwards)
 {
@@ -196,8 +196,8 @@ void setup()
     // clear_serial();
 
     myPID.SetMode(AUTOMATIC);
-    myPID.SetOutputLimits(0, 255);
-    myPID.SetSampleTime(20);
+    myPID.SetOutputLimits(-255, 255);
+    myPID.SetSampleTime(0);
 
     get_init_data();
 
@@ -258,20 +258,9 @@ void loop()
         // Serial.println(force_val);
     }
 
-    // force_val = recvWithStartEndMarkers(); // check it for extra precision
-
-    // if (newData == true)
-    // {
-    //     // Serial.print("This just in ... ");
-    //     // Serial.println(force_val);
-    //     newData = false;
-    // }
-
     // calculating motor's power
     force_err = wanted_force - force_val;
     myPID.Compute();
-
-    // Serial.write(int(force_val));
 
     if (force_val == 0.0)
     {
@@ -305,7 +294,7 @@ void loop()
 
         int encoder_stop_val = (abs(touch_encoder_val) - ticks) * (abs(touch_encoder_val) / touch_encoder_val);
 
-        while (abs(encoder_val) < abs(encoder_stop_val) - 20 || abs(encoder_val) > abs(encoder_stop_val) + 20)
+        while (abs(encoder_val) < abs(encoder_stop_val) - 5 || abs(encoder_val) > abs(encoder_stop_val) + 5)
         {
             move_motor((abs(encoder_val) - encoder_stop_val) * ENCODER_KP * 2, true);
         }
@@ -317,7 +306,7 @@ void loop()
         new_iteration = false;
         myPID.SetOutputLimits(0.0, 1.0);  // Forces minimum up to 0.0
         myPID.SetOutputLimits(-1.0, 0.0); // Forces maximum down to 0.0
-        myPID.SetOutputLimits(0, 255);    // Set the limits back to normal
+        myPID.SetOutputLimits(-255, 255); // Set the limits back to normal
     }
 
     if (curr_iteration == iterations)
