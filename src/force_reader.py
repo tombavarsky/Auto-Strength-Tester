@@ -122,8 +122,6 @@ def main():
     curr_iteration = 0
     curr_time = 0.0
     sensor_val = 0.0
-    last_sensor_val = 0.0
-    last_last_sensor_val = 0.0
 
     header = ["Iteration", "Time", "Force"]
     data = [curr_iteration, curr_time, sensor_val]
@@ -180,6 +178,8 @@ def main():
     START_TIME = time.time()
     curr_time_list = []
     force_val_list = []
+    real_force_counter = 0
+    FILTER_COUNTER = 2
 
     while True:
         curr_time = round(time.time() - START_TIME, 4)
@@ -188,17 +188,18 @@ def main():
         if sensor_val is not None:
             sensor_val = sensor_val[:sensor_val.find('N')]
             print(sensor_val)
-            # if (float(last_sensor_val) == 0 and float(sensor_val) != 0) or (float(last_last_sensor_val) == 0 and float(last_sensor_val) != 0 and float(sensor_val) != 0):
-            #     last_sensor_val = sensor_val
-            #     last_last_sensor_val = last_sensor_val
-            #     sensor_val = 0
 
-            #     continue
+            if float(sensor_val) != 0:
+                real_force_counter += 1
+
+                if real_force_counter < FILTER_COUNTER:
+                    sensor_val = '0.0'
+
+            else:
+                real_force_counter = 0
 
             if not no_arduino:
-                # arduino.write('<'.encode())
                 arduino.write(sensor_val.encode())
-                # arduino.write('>'.encode())
                 answer = arduino.read(arduino.in_waiting)
 
                 if answer != b'':
@@ -236,9 +237,6 @@ def main():
                     plt.show()
 
                     break
-
-            last_sensor_val = sensor_val
-            last_last_sensor_val = last_sensor_val
 
 
 main()
