@@ -30,7 +30,7 @@ char messageFromPC[buffSize] = {0};
 double wanted_force, force_val, motor_power;
 int ticks = 0;
 
-const float Kp = 7.5, Ki = 0, Kd = 0.9;
+const float Kp = 7.8, Ki = 0, Kd = 1;
 PID myPID(&force_val, &motor_power, &wanted_force, Kp, Ki, Kd, P_ON_E, DIRECT);
 
 void move_motor(int motor_pow, const bool backwards)
@@ -141,6 +141,11 @@ void get_init_data()
         {
             wanted_force = recvWithStartEndMarkers();
             newData = false;
+
+            // if (wanted_force <= 10)
+            // {
+            //     myPID.SetTunings(1, 0, 0.9);
+            // }
         }
         else if (state == State::N)
         {
@@ -298,6 +303,7 @@ void loop()
         {
             move_motor((abs(encoder_val) - encoder_stop_val) * ENCODER_KP * 2, true);
         }
+        clear_serial();
     }
 
     if (new_iteration && (encoder_val < touch_encoder_val || force_val < 0.1 * wanted_force))

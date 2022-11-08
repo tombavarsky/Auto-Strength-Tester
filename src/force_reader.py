@@ -33,7 +33,7 @@ def popup():
 
     iterations_tk = tk.IntVar()
     wanted_force_tk = tk.DoubleVar()
-    ticks_tk = tk.DoubleVar(value=537.7 / MM_TO_MOTOR_TICKS)
+    ticks_tk = tk.DoubleVar(value=(537.7 / MM_TO_MOTOR_TICKS) + 2)
 
     root.geometry("300x300")
     root.title('Auto Strength Tester')
@@ -188,12 +188,12 @@ def main():
         if sensor_val is not None:
             sensor_val = sensor_val[:sensor_val.find('N')]
             print(sensor_val)
-            if (float(last_sensor_val) == 0 and float(sensor_val) != 0) or (float(last_last_sensor_val) == 0 and float(last_sensor_val) != 0 and float(sensor_val) != 0):
-                last_sensor_val = sensor_val
-                last_last_sensor_val = last_sensor_val
-                sensor_val = 0
+            # if (float(last_sensor_val) == 0 and float(sensor_val) != 0) or (float(last_last_sensor_val) == 0 and float(last_sensor_val) != 0 and float(sensor_val) != 0):
+            #     last_sensor_val = sensor_val
+            #     last_last_sensor_val = last_sensor_val
+            #     sensor_val = 0
 
-                continue
+            #     continue
 
             if not no_arduino:
                 # arduino.write('<'.encode())
