@@ -170,6 +170,7 @@ def main():
     arduino.write(b'<')
     arduino.write(PUSH_SEND)
     arduino.write(b'>')
+    arduino.write(b'\n')
 
     arduino.write(b'<')
     arduino.write(TICKS)

@@ -206,7 +206,7 @@ void setup()
 
     get_init_data();
 
-    dir = state == State::PUSH; // determine the direction base on user input
+    dir = state == State::PUSH; // determine the direction based on user input
 
     for (int i = 0; i < DELTA_FORCE_LEN; i++)
     {
@@ -241,7 +241,7 @@ void loop()
 
         avg_delta_force = 0;
 
-        // predicition of the real force value.
+        // predicition of the force value.
         for (int i = 1; i < DELTA_FORCE_LEN; i++)
         {
             last_delta_forces[i - 1] = last_delta_forces[i];
